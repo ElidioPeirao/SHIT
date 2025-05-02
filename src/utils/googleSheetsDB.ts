@@ -14,9 +14,9 @@ export default class GoogleSheetsDB {
     this.config = config;
     
     // If no script ID is provided, use local fallback
-    if (!config.sheetId || config.sheetId === 'AKfycbwWnFMmxaPcA8HZBABZQi9pV-ZqFgYIEx0Fp0P4fNm4PcYY5P3L1Keszb-03DFIoypr') {
-      console.warn('No script ID provided, using local mock data');
-      this.useLocalFallback = true;
+    //if (!config.sheetId || config.sheetId === 'AKfycbwWnFMmxaPcA8HZBABZQi9pV-ZqFgYIEx0Fp0P4fNm4PcYY5P3L1Keszb-03DFIoypr') {
+     // console.warn('No script ID provided, using local mock data');
+     // this.useLocalFallback = true;
     }
   }
   
