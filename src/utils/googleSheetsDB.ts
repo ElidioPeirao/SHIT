@@ -9,78 +9,70 @@ export interface GoogleSheetsConfig {
 export default class GoogleSheetsDB {
   private config: GoogleSheetsConfig;
   private useLocalFallback: boolean = false;
-  
+
   constructor(config: GoogleSheetsConfig) {
     this.config = config;
-    
-    // If no script ID is provided, use local fallback
-    //if (!config.sheetId || config.sheetId === 'AKfycbwWnFMmxaPcA8HZBABZQi9pV-ZqFgYIEx0Fp0P4fNm4PcYY5P3L1Keszb-03DFIoypr') {
-     // console.warn('No script ID provided, using local mock data');
-     // this.useLocalFallback = true;
-    }
   }
-  
+
+  /**
+   * Fetch list of rows from a given sheet
+   */
   async fetchData(sheetName: string): Promise<any[]> {
+    if (this.useLocalFallback) {
+      console.log(`Using local mock data for ${sheetName}`);
+      return this.getMockData(sheetName);
+    }
     try {
-      // Use mock data if no script ID or in fallback mode
-      if (this.useLocalFallback) {
-        return this.getMockData(sheetName);
-      }
-      
-      const result = await callSheetsApi(this.config.sheetId, 'read', sheetName);
-      
-      // If successful, return the data
-      if (result.success) {
-        return result.result || [];
-      } else {
-        // If there's an API error, fall back to mock data
-        console.error('Error fetching data, using fallback:', result.error);
-        this.useLocalFallback = true;
-        return this.getMockData(sheetName);
-      }
+      const result = await callSheetsApi(
+        this.config.sheetId,
+        'list',
+        sheetName
+      );
+      return result.success ? result.result : [];
     } catch (error) {
       console.error('Error fetching data from Google Sheets:', error);
-      
-      // Fall back to mock data
       this.useLocalFallback = true;
       return this.getMockData(sheetName);
     }
   }
-  
+
+  /**
+   * Insert a new row into a sheet
+   */
   async insertRow(sheetName: string, rowData: Record<string, any>): Promise<boolean> {
+    if (this.useLocalFallback) {
+      console.log(`Mock insert into ${sheetName}:`, rowData);
+      return true;
+    }
     try {
-      if (this.useLocalFallback) {
-        console.log(`Mock insert into ${sheetName}:`, rowData);
-        return true;
-      }
-      
-      console.log(`Inserting row to ${sheetName}:`, rowData);
-      
       const result = await callSheetsApi(
         this.config.sheetId,
         'insert',
         sheetName,
         rowData
       );
-      
       console.log('Insert result:', result);
-      return result.success || false;
+      return result.success;
     } catch (error) {
       console.error('Error inserting data to Google Sheets:', error);
-      
-      // Fall back to mock mode if the API fails
       this.useLocalFallback = true;
-      return true; // Pretend it succeeded
+      return true;
     }
   }
-  
-  async updateRow(sheetName: string, rowId: string, rowData: Record<string, any>): Promise<boolean> {
+
+  /**
+   * Update an existing row in a sheet
+   */
+  async updateRow(
+    sheetName: string,
+    rowId: string,
+    rowData: Record<string, any>
+  ): Promise<boolean> {
+    if (this.useLocalFallback) {
+      console.log(`Mock update in ${sheetName} for id ${rowId}:`, rowData);
+      return true;
+    }
     try {
-      if (this.useLocalFallback) {
-        console.log(`Mock update in ${sheetName} for id ${rowId}:`, rowData);
-        return true;
-      }
-      
       const result = await callSheetsApi(
         this.config.sheetId,
         'update',
@@ -88,43 +80,41 @@ export default class GoogleSheetsDB {
         rowData,
         rowId
       );
-      
-      return result.success || false;
+      return result.success;
     } catch (error) {
       console.error('Error updating data in Google Sheets:', error);
-      
-      // Fall back to mock mode if the API fails
       this.useLocalFallback = true;
-      return true; // Pretend it succeeded
+      return true;
     }
   }
-  
+
+  /**
+   * Delete a row by id from a sheet
+   */
   async deleteRow(sheetName: string, rowId: string): Promise<boolean> {
+    if (this.useLocalFallback) {
+      console.log(`Mock delete in ${sheetName} for id ${rowId}`);
+      return true;
+    }
     try {
-      if (this.useLocalFallback) {
-        console.log(`Mock delete from ${sheetName} id ${rowId}`);
-        return true;
-      }
-      
       const result = await callSheetsApi(
         this.config.sheetId,
         'delete',
         sheetName,
-        null,
+        undefined,
         rowId
       );
-      
-      return result.success || false;
+      return result.success;
     } catch (error) {
       console.error('Error deleting data from Google Sheets:', error);
-      
-      // Fall back to mock mode if the API fails
       this.useLocalFallback = true;
-      return true; // Pretend it succeeded
+      return true;
     }
   }
-  
-  // Helper method to get mock data for fallback mode
+
+  /**
+   * Fallback mock data for development
+   */
   private getMockData(sheetName: string): any[] {
     switch (sheetName) {
       case 'users':
@@ -138,4 +128,3 @@ export default class GoogleSheetsDB {
     }
   }
 }
- 
