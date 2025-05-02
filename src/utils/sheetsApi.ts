@@ -5,7 +5,7 @@
  * Uses a technique to avoid the "body has already been used" error with redirects
  */
 export async function fetchWithProxy(scriptId: string, body: any) {
-  const proxyUrl = `https://hooks.jdoodle.net/proxy?url=https://script.google.com/macros/s/${scriptId}/exec`;
+  const scriptUrl = `https://script.google.com/macros/s/${this.config.sheetId}/exec`;
   
   try {
     // Convert body to string once to avoid "body already used" issue
