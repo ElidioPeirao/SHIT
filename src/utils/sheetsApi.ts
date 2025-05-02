@@ -1,53 +1,43 @@
-// Utility functions for making requests to Google Sheets API diretamente
-
 /**
- * Faz requisições POST diretamente ao Google Apps Script publicado como Web App
- * Exige que o Apps Script esteja configurado como "Qualquer pessoa pode acessar"
+ * Faz requisição direta ao seu Apps Script Web App (sem proxy JDoodle)
  */
 export async function fetchWithProxy(scriptId: string, body: any) {
-  const apiUrl = `https://script.google.com/macros/s/${scriptId}/exec`;
+  const url = `https://script.google.com/macros/s/${scriptId}/exec`;
+  const bodyString = JSON.stringify(body);
 
-  try {
-    const bodyString = JSON.stringify(body);
-    console.log(`Fazendo requisição para ${apiUrl} com payload:`, bodyString);
+  console.log(`Calling Google Sheets Web App at ${url}`, bodyString);
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: bodyString,
-      redirect: 'follow',
-    });
+  const response = await fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: bodyString,
+  });
 
-    if (!response.ok) {
-      throw new Error(`Erro HTTP! Status: ${response.status}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Erro ao chamar a API do Google Sheets:', error);
-    return { success: false, error: error.toString() };
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`HTTP error! Status: ${response.status}`, errorText);
+    throw new Error(`Google Sheets API error: ${response.status}`);
   }
+
+  return response.json();
 }
 
 /**
- * Função principal para chamadas padronizadas à API do Sheets
+ * Simplified interface for making API calls to the Sheets Web App
  */
 export async function callSheetsApi(
   scriptId: string,
-  action: 'read' | 'insert' | 'update' | 'delete',
+  action: string,
   sheet: string,
-  id?: string,
-  data?: Record<string, any>
+  data?: any,
+  id?: string
 ) {
-  const body: Record<string, any> = {
-    action,
-    sheet,
-  };
+  const payload: any = { action, sheet };
+  if (data) payload.data = data;
+  if (id) payload.id = id;
 
-  if (id) body.id = id;
-  if (data) body.data = data;
-
-  return await fetchWithProxy(scriptId, body);
+  return fetchWithProxy(scriptId, payload);
 }
